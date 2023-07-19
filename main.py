@@ -1,3 +1,10 @@
+"""
+Entry point for the program.
+1. Takes input from user and makes request to API.
+2. Parses JSON data from the API into a Result object.
+3. Generates CSV files for tasks and marks.
+"""
+
 import json
 import sys
 

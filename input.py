@@ -1,15 +1,40 @@
+"""
+Takes input from user and makes request to API.
+"""
+
 import os
 from datetime import datetime
+from typing import Dict, Tuple
 
 import requests
 from dotenv import load_dotenv
 
 
-def input_and_req(start_date=None, end_date=None, year_group=None):
+def input_and_req(
+    start_date=None, end_date=None, year_group=None
+) -> Tuple[int, str, str, dict, int]:
+    """Takes input from user and makes request to API.
+
+    Args:
+        start_date (str, optional): Start date to search the API. Defaults to None.
+        end_date (str, optional): End date to search the API. Defaults to None.
+        year_group (str, optional): Year group to filter the API results. Defaults to None.
+
+    Raises:
+        ValueError: AUTH environment variable not set
+        ValueError: HOST environment variable not set
+
+    Returns:
+        Tuple[int, str, str, dict, int] | None: _description_
+    """
     load_dotenv()
 
-    headers = {
-        "Authorization": os.getenv("AUTH"),
+    auth: str | None = os.getenv("AUTH")
+    if auth is None:
+        raise ValueError("AUTH environment variable not set")
+
+    headers: Dict[str, str] = {
+        "Authorization": auth,
         "Accept": "application/json",
         "Content-Type": "application/json",
     }
@@ -30,14 +55,10 @@ def input_and_req(start_date=None, end_date=None, year_group=None):
             except ValueError:
                 print("Invalid date format")
     else:
-        try:
-            start_date = datetime.strptime(start_date, "%Y-%m-%d")
-            end_date = datetime.strptime(end_date, "%Y-%m-%d")
-            if start_date >= end_date:
-                raise ValueError
-        except ValueError:
-            print("Start date must be before end date")
-            return None
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
+        if start_date >= end_date:
+            raise ValueError("Start date must be before end date")
 
     if year_group is None:
         # input year group between 7 and 13
@@ -53,27 +74,25 @@ def input_and_req(start_date=None, end_date=None, year_group=None):
             except ValueError:
                 print("Invalid year group")
     else:
-        try:
-            year_group = int(year_group)
-            if not 7 <= year_group <= 13:
-                raise ValueError
-        except ValueError:
-            print("Year group must be between 7 and 13")
-            return None
+        year_group = int(year_group)
+        if not 7 <= year_group <= 13:
+            raise ValueError("Year group must be between 7 and 13")
 
     # ,"yearLevel":{{"name": "{year_group}"}}
     # convert to format required by API, start midnight and end 11:59pm
-    f = f'{{"weighted":true,"workType":{{"name":"Assessment task"}},"dueDate":{{"from": "{start_date.strftime("%Y-%m-%dT00:00:00+11:00")}","to": "{end_date.strftime("%Y-%m-%dT23:59:59+11:00")}"}}}}'
-    params = {
-        "filter": f,
+    params: Dict[
+        str,
+        str | int,
+    ] = {
+        "filter": f'{{"weighted":true,"workType":{{"name":"Assessment task"}},"dueDate":{{"from": "{start_date.strftime("%Y-%m-%dT00:00:00+11:00")}","to": "{end_date.strftime("%Y-%m-%dT23:59:59+11:00")}"}}}}',
         "limit": 10000,  # Hopefully this is enough...
     }
 
-    req = requests.get(
-        os.getenv("HOST"),
-        params=params,
-        headers=headers,
-    )
+    host: str | None = os.getenv("HOST")
+    if host is None:
+        raise ValueError("HOST environment variable not set")
+
+    req = requests.get(host, params=params, headers=headers)
 
     return (
         year_group,

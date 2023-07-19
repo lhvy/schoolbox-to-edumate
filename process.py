@@ -1,145 +1,81 @@
+"""
+Process data from the API into a Result object.
+"""
+
 from datetime import datetime
 from model import (
     Assessment,
-    Capability,
-    Descriptor,
     Folder,
-    Indicator,
-    # Instructor,
-    Learner,
     Metadata,
     Participant,
-    ParticipantRubric,
-    ParticipantCapability,
-    ParticipantIndicator,
     Result,
-    Rubric,
     WorkType,
 )
 
 
-def parse_json(data) -> Result:
+def parse_json(data: dict) -> Result:
+    """Parse JSON data from the API into a Result object.
+
+    Args:
+        data (dict): JSON data from the API
+
+    Returns:
+        Result: Result object containing assessments and metadata
+    """
+
     assessment_data = data["data"]
     metadata = data["metadata"]
 
     result_metadata = Metadata(metadata["count"], metadata["cursor"])
 
     assessments = []
-    for d in assessment_data:
-        work_type = WorkType(d["workType"]["id"], d["workType"]["name"])
+    for task in assessment_data:
+        work_type = WorkType(task["workType"]["id"], task["workType"]["name"])
+
         folder = Folder(
-            d["folder"]["id"],
-            d["folder"]["name"],
-            d["folder"]["code"],
-            d["folder"]["yearLevel"],
+            task["folder"]["id"],
+            task["folder"]["name"],
+            task["folder"]["code"],
+            task["folder"]["yearLevel"],
         )
-        if "rubric" not in d or d["rubric"] is None:
-            d["rubric"] = {"capabilities": []}
-        capabilities = []
-        for c in d["rubric"]["capabilities"]:
-            indicators = []
-            for i in c["indicators"]:
-                descriptors = []
-                for de in i["descriptors"]:
-                    descriptor = Descriptor(
-                        de["id"], de["description"], de["maxValue"], de["sequence"]
-                    )
-                    descriptors.append(descriptor)
-                indicator = Indicator(i["id"], i["name"], i["maxValue"], descriptors)
-                indicators.append(indicator)
-            capability = Capability(c["id"], c["name"], c["maxValue"], indicators)
-            capabilities.append(capability)
-        rubric = Rubric(capabilities)
+
         participants = []
-        if d["participants"] is None or len(d["participants"]) == 0:
+        if task["participants"] is None or len(task["participants"]) == 0:
             result_metadata.count -= 1  # Keep the count accurate
             continue
-        for p in d["participants"]:
-            learner = Learner(
-                p["learner"]["id"],
-                p["learner"]["title"],
-                p["learner"]["firstName"],
-                p["learner"]["preferredName"],
-                p["learner"]["lastName"],
-                p["learner"]["externalId"],
-            )
-            # instructor = Instructor(
-            #     p["instructor"]["id"],
-            #     p["instructor"]["title"],
-            #     p["instructor"]["firstName"],
-            #     p["instructor"]["preferredName"],
-            #     p["instructor"]["lastName"],
-            #     p["instructor"]["externalId"],
-            # )
-            if "rubric" not in p or p["rubric"] is None:
-                p["rubric"] = {"capabilities": []}
-            participant_capabilities = []
-            for c in p["rubric"]["capabilities"]:
-                participant_indicators = []
-                for i in c["indicators"]:
-                    # Some indicators don't have descriptors
-                    if i["descriptor"] is None:
-                        i["descriptor"] = {
-                            "id": None,
-                            "description": None,
-                            "maxValue": None,
-                            "sequence": None,
-                        }
-                    participant_descriptor = Descriptor(
-                        i["descriptor"]["id"],
-                        i["descriptor"]["description"],
-                        i["descriptor"]["maxValue"],
-                        i["descriptor"]["sequence"],
-                    )
-                    participant_indicator = ParticipantIndicator(
-                        i["id"],
-                        i["name"],
-                        i["maxValue"],
-                        i["value"],
-                        participant_descriptor,
-                    )
-                    participant_indicators.append(participant_indicator)
-                participant_capability = ParticipantCapability(
-                    c["id"],
-                    c["name"],
-                    c["value"],
-                    c["maxValue"],
-                    c["mark"],
-                    participant_indicators,
-                )
-                participant_capabilities.append(participant_capability)
-            participant_rubric = ParticipantRubric(participant_capabilities)
+        for student in task["participants"]:
             # change format of date from 2023-02-24T14:40:24+11:00 to YYYY-MM-DD
             # raw_p_date = datetime.strptime(p["response"]["date"], "%Y-%m-%dT%H:%M:%S%z")
             # p_date = raw_p_date.strftime("%Y-%m-%d")
 
-            if "feedback" not in p or p["feedback"] is None:
+            if "feedback" not in student or student["feedback"] is None:
                 continue
 
             participant = Participant(
-                learner,
-                p["feedback"]["mark"],
-                p["normalisedMark"],
-                p["comment"],
+                student["learner"]["id"],
+                student["learner"]["externalId"],
+                student["learner"]["title"],
+                student["learner"]["firstName"],
+                student["learner"]["preferredName"],
+                student["learner"]["lastName"],
+                student["feedback"]["mark"],
                 # p_date,
-                # instructor,
-                participant_rubric,
             )
             participants.append(participant)
-        raw_date = datetime.strptime(d["dueDate"], "%Y-%m-%dT%H:%M:%S%z")
+
+        raw_date = datetime.strptime(task["dueDate"], "%Y-%m-%dT%H:%M:%S%z")
         date = raw_date.strftime("%Y-%m-%d")
         assessment = Assessment(
-            d["id"],
-            d["title"],
-            d["assessmentType"],
-            d["commonAssessment"],
+            task["id"],
+            task["title"],
+            task["assessmentType"],
+            task["commonAssessment"],
             work_type,
             folder,
-            d["subjectCode"],
-            d["project"],
-            d["weight"],
+            task["subjectCode"],
+            task["project"],
+            task["weight"],
             date,
-            rubric,
             participants,
         )
 

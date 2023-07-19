@@ -1,3 +1,7 @@
+"""
+Takes a Result object and generates a CSV files for tasks and marks.
+"""
+
 import csv
 from typing import List
 
@@ -6,9 +10,16 @@ from model import Assessment, Participant
 
 def generate_assessments_csv(
     assessments: List["Assessment"], year_group: int, start_date: str, end_date: str
-):
-    # generate csv for assessments with the following format:
-    # coursework_task, task_kind, coursework_category, description, academic_year, course, weighting, mark_out_of, dmy_set_date, dmy_due_date, into_markbook_flag, record_marks_flag, grade_only, criteria_only, status_flag, release_marks_flag, task_dropdown_flag, do_not_allow_comments
+) -> None:
+    """Generate a CSV file for tasks.
+
+    Args:
+        assessments (List["Assessment"]): List of assessments
+        year_group (int): Year group to put in the filename
+        start_date (str): Start date to put in the filename
+        end_date (str): End date to put in the filename
+    """
+
     with open(
         f"{year_group}_{start_date}_{end_date}_tasks.txt",
         "w",
@@ -41,14 +52,8 @@ def generate_assessments_csv(
         )
         assessment: Assessment
         for assessment in assessments:
-            # assessment.participants contains all students, which have a mark in the format "X / Y"
-            # there is also maybe a rubric, which contains capabilities that sum up to the max mark
-
-            # for now we will just use the max mark from the student,
-            # but the code to get from a rubric is below:
-            # sum([c.max_value for c in assessment.rubric.capabilities])
-
-            # parse student mark from string
+            # assessment.participants contains all students,
+            # which have a mark in the format "X / Y" or "X %" or "Not Assessed"
             mark = "Not Assessed"
             for participant in assessment.participants:
                 if " %" in participant.mark:
@@ -57,6 +62,7 @@ def generate_assessments_csv(
                 if " / " in participant.mark:
                     mark = participant.mark.split(" / ")[1]
                     break
+
             if mark == "Not Assessed":
                 # skip assessment if no students have a mark
                 continue
@@ -100,15 +106,22 @@ def generate_assessments_csv(
 
 def generate_marks_csv(
     assessments: List["Assessment"], year_group: int, start_date: str, end_date: str
-):
+) -> None:
+    """Generate a CSV file for marks.
+
+    Args:
+        assessments (List["Assessment"]): List of assessments
+        year_group (int): Year group to put in the filename
+        start_date (str): Start date to put in the filename
+        end_date (str): End date to put in the filename
+    """
+
     with open(
         f"{year_group}_{start_date}_{end_date}_marks.txt",
         "w",
         newline="",
         encoding="UTF-8",
     ) as marks_file:
-        # generate csv for marks with the following format:
-        # student_number, coursework_task, raw_mark, raw_mark_date, course, academic_year
         writer = csv.writer(marks_file, delimiter="\t")
         writer.writerow(
             [
@@ -138,7 +151,7 @@ def generate_marks_csv(
                 course = " ".join(assessment.folder.name.split(" ")[:-1])
                 writer.writerow(
                     [
-                        participant.learner.external_id,
+                        participant.external_id,
                         assessment.title,
                         # take mark from "43 / 55" to 43
                         mark,

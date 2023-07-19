@@ -6,7 +6,7 @@ from input import input_and_req
 from model import Result
 from process import parse_json
 
-year_group, data, status = input_and_req()
+year_group, start_date, end_date, data, status = input_and_req()
 
 # save data to file
 with open("data.json", "w", encoding="UTF-8") as f:
@@ -27,7 +27,7 @@ assert len(result.data) == result.metadata.count
 
 assessments = result.filter_by_year(year_group)
 
-generate_assessments_csv(assessments)
-generate_marks_csv(assessments)
+generate_assessments_csv(assessments, year_group, start_date, end_date)
+generate_marks_csv(assessments, year_group, start_date, end_date)
 
 print("Generated marks.txt and tasks.txt for Year " + str(year_group) + ".")

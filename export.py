@@ -4,10 +4,17 @@ from typing import List
 from model import Assessment, Participant
 
 
-def generate_assessments_csv(assessments: List["Assessment"]):
+def generate_assessments_csv(
+    assessments: List["Assessment"], year_group: int, start_date: str, end_date: str
+):
     # generate csv for assessments with the following format:
     # coursework_task, task_kind, coursework_category, description, academic_year, course, weighting, mark_out_of, dmy_set_date, dmy_due_date, into_markbook_flag, record_marks_flag, grade_only, criteria_only, status_flag, release_marks_flag, task_dropdown_flag, do_not_allow_comments
-    with open("tasks.txt", "w", newline="", encoding="UTF-8") as tasks_file:
+    with open(
+        f"{year_group}_{start_date}_{end_date}_tasks.txt",
+        "w",
+        newline="",
+        encoding="UTF-8",
+    ) as tasks_file:
         writer = csv.writer(tasks_file, delimiter="\t")
         written_rows = set()
         writer.writerow(
@@ -91,8 +98,15 @@ def generate_assessments_csv(assessments: List["Assessment"]):
             written_rows.add(row_tuple)
 
 
-def generate_marks_csv(assessments: List["Assessment"]):
-    with open("marks.txt", "w", newline="", encoding="UTF-8") as marks_file:
+def generate_marks_csv(
+    assessments: List["Assessment"], year_group: int, start_date: str, end_date: str
+):
+    with open(
+        f"{year_group}_{start_date}_{end_date}_marks.txt",
+        "w",
+        newline="",
+        encoding="UTF-8",
+    ) as marks_file:
         # generate csv for marks with the following format:
         # student_number, coursework_task, raw_mark, raw_mark_date, course, academic_year
         writer = csv.writer(marks_file, delimiter="\t")

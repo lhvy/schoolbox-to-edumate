@@ -39,10 +39,6 @@ def input_and_req(start_date=None, end_date=None, year_group=None):
             print("Start date must be before end date")
             return None
 
-    # convert to format required by API, start midnight and end 11:59pm
-    start_date = start_date.strftime("%Y-%m-%dT00:00:00+11:00")
-    end_date = end_date.strftime("%Y-%m-%dT23:59:59+11:00")
-
     if year_group is None:
         # input year group between 7 and 13
         valid = False
@@ -66,7 +62,8 @@ def input_and_req(start_date=None, end_date=None, year_group=None):
             return None
 
     # ,"yearLevel":{{"name": "{year_group}"}}
-    f = f'{{"weighted":true,"workType":{{"name":"Assessment task"}},"dueDate":{{"from": "{start_date}","to": "{end_date}"}}}}'
+    # convert to format required by API, start midnight and end 11:59pm
+    f = f'{{"weighted":true,"workType":{{"name":"Assessment task"}},"dueDate":{{"from": "{start_date.strftime("%Y-%m-%dT00:00:00+11:00")}","to": "{end_date.strftime("%Y-%m-%dT23:59:59+11:00")}"}}}}'
     params = {
         "filter": f,
         "limit": 10000,  # Hopefully this is enough...
@@ -78,4 +75,10 @@ def input_and_req(start_date=None, end_date=None, year_group=None):
         headers=headers,
     )
 
-    return year_group, req.json(), req.status_code
+    return (
+        year_group,
+        start_date.strftime("%Y-%m-%d"),
+        end_date.strftime("%Y-%m-%d"),
+        req.json(),
+        req.status_code,
+    )

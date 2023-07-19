@@ -5,7 +5,7 @@ from model import (
     Descriptor,
     Folder,
     Indicator,
-    Instructor,
+    # Instructor,
     Learner,
     Metadata,
     Participant,
@@ -33,7 +33,7 @@ def parse_json(data) -> Result:
             d["folder"]["code"],
             d["folder"]["yearLevel"],
         )
-        if d["rubric"] is None:
+        if "rubric" not in d or d["rubric"] is None:
             d["rubric"] = {"capabilities": []}
         capabilities = []
         for c in d["rubric"]["capabilities"]:
@@ -63,15 +63,15 @@ def parse_json(data) -> Result:
                 p["learner"]["lastName"],
                 p["learner"]["externalId"],
             )
-            instructor = Instructor(
-                p["instructor"]["id"],
-                p["instructor"]["title"],
-                p["instructor"]["firstName"],
-                p["instructor"]["preferredName"],
-                p["instructor"]["lastName"],
-                p["instructor"]["externalId"],
-            )
-            if p["rubric"] is None:
+            # instructor = Instructor(
+            #     p["instructor"]["id"],
+            #     p["instructor"]["title"],
+            #     p["instructor"]["firstName"],
+            #     p["instructor"]["preferredName"],
+            #     p["instructor"]["lastName"],
+            #     p["instructor"]["externalId"],
+            # )
+            if "rubric" not in p or p["rubric"] is None:
                 p["rubric"] = {"capabilities": []}
             participant_capabilities = []
             for c in p["rubric"]["capabilities"]:
@@ -110,15 +110,19 @@ def parse_json(data) -> Result:
                 participant_capabilities.append(participant_capability)
             participant_rubric = ParticipantRubric(participant_capabilities)
             # change format of date from 2023-02-24T14:40:24+11:00 to YYYY-MM-DD
-            raw_p_date = datetime.strptime(p["date"], "%Y-%m-%dT%H:%M:%S%z")
-            p_date = raw_p_date.strftime("%Y-%m-%d")
+            # raw_p_date = datetime.strptime(p["response"]["date"], "%Y-%m-%dT%H:%M:%S%z")
+            # p_date = raw_p_date.strftime("%Y-%m-%d")
+
+            if "feedback" not in p or p["feedback"] is None:
+                continue
+
             participant = Participant(
                 learner,
-                p["mark"],
+                p["feedback"]["mark"],
                 p["normalisedMark"],
                 p["comment"],
-                p_date,
-                instructor,
+                # p_date,
+                # instructor,
                 participant_rubric,
             )
             participants.append(participant)
@@ -133,19 +137,13 @@ def parse_json(data) -> Result:
             folder,
             d["subjectCode"],
             d["project"],
-            d["weighted"],
             d["weight"],
             date,
             rubric,
             participants,
         )
 
-        if (
-            assessment.weight == 0
-            or assessment.weight is None
-            or assessment.weighted is False
-            or assessment.weighted is None
-        ):
+        if assessment.weight == 0 or assessment.weight is None:
             result_metadata.count -= 1
             continue
 

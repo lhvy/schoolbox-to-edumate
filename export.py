@@ -128,7 +128,7 @@ def generate_marks_csv(assessments: List["Assessment"]):
                         assessment.title,
                         # take mark from "43 / 55" to 43
                         mark,
-                        participant.date,
+                        assessment.due_date,
                         course,
                         # get year from due date in format 2022-03-09
                         assessment.due_date.split("-")[0],

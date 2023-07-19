@@ -14,8 +14,7 @@ with open("data.json", "w", encoding="UTF-8") as f:
 
 if status != 200:
     print("Error: " + str(status))
-    print("This may be due to an invalid token or url")
-    print("Check data.json for the full response")
+    print("Check data.json for the full error message")
     sys.exit(1)
 
 result: Result = parse_json(data)

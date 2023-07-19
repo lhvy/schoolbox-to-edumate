@@ -114,16 +114,16 @@ class Participant:
         mark: str,
         normalised_mark: float,  # should this be a float or a string? it's a string in the json
         comment: str,
-        date: str,
-        instructor: Instructor,
+        # date: str,
+        # instructor: Instructor,
         rubric: ParticipantRubric,
     ):
         self.learner = learner
         self.mark = mark
         self.normalised_mark = normalised_mark
         self.comment = comment
-        self.date = date
-        self.instructor = instructor
+        # self.date = date
+        # self.instructor = instructor
         self.rubric = rubric
 
 
@@ -158,7 +158,6 @@ class Assessment:
         folder: Folder,
         subject_code: str,
         project: str,
-        weighted: bool,
         weight: float,
         due_date: str,
         rubric: Rubric,
@@ -172,7 +171,6 @@ class Assessment:
         self.folder = folder
         self.subject_code = subject_code
         self.project = project
-        self.weighted = weighted
         self.weight = weight
         self.due_date = due_date
         self.rubric = rubric

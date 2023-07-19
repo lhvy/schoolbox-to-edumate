@@ -65,12 +65,10 @@ def input_and_req(start_date=None, end_date=None, year_group=None):
             print("Year group must be between 7 and 13")
             return None
 
+    # ,"yearLevel":{{"name": "{year_group}"}}
+    f = f'{{"weighted":true,"workType":{{"name":"Assessment task"}},"dueDate":{{"from": "{start_date}","to": "{end_date}"}}}}'
     params = {
-        "filter": '{"weighted":true,"workType":{"name":"Assessment task"},"dueDate":{"from": "'
-        + start_date
-        + '","to": "'
-        + end_date
-        + '"}}',
+        "filter": f,
         "limit": 10000,  # Hopefully this is enough...
     }
 

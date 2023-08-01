@@ -8,7 +8,7 @@ Entry point for the program.
 import json
 import sys
 
-from export import generate_assessments_csv, generate_marks_csv
+from export import generate_assessments_csv, generate_marks_csv, generate_comments_csv
 from input import input_and_req
 from model import Result
 from process import parse_json
@@ -36,5 +36,6 @@ assessments = result.filter_by_year(year_group)
 
 generate_assessments_csv(assessments, year_group, start_date, end_date)
 generate_marks_csv(assessments, year_group, start_date, end_date)
+generate_comments_csv(assessments, year_group, start_date, end_date)
 
 print("Generated marks.txt and tasks.txt for Year " + str(year_group) + ".")

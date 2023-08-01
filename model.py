@@ -19,6 +19,7 @@ class Participant:
     preferred_name: str
     last_name: str
     mark: str
+    comment: str
     # date: str
 
 

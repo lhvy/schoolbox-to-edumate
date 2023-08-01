@@ -161,3 +161,63 @@ def generate_marks_csv(
                         assessment.due_date.split("-")[0],
                     ]
                 )
+
+
+def generate_comments_csv(
+    assessments: List["Assessment"], year_group: int, start_date: str, end_date: str
+) -> None:
+    """Generate a CSV file for comments.
+
+    Args:
+        assessments (List["Assessment"]): List of assessments
+        year_group (int): Year group to put in the filename
+        start_date (str): Start date to put in the filename
+        end_date (str): End date to put in the filename
+    """
+
+    with open(
+        f"{year_group}_{start_date}_{end_date}_comments.csv",
+        "w",
+        newline="",
+        encoding="UTF-8",
+    ) as marks_file:
+        writer = csv.writer(marks_file, delimiter=",")
+        writer.writerow(
+            [
+                "student_number",
+                "course",
+                "coursework_task",
+                "raw_mark",
+                "comment",
+            ]
+        )
+        assessment: Assessment
+        for assessment in assessments:
+            participant: Participant
+            for participant in assessment.participants:
+                if " %" in participant.mark:
+                    # "86.42 %"
+                    mark = participant.mark.split(" %")[0]
+                elif " / " in participant.mark:
+                    # "43 / 55"
+                    mark = participant.mark.split(" / ")[0]
+                else:
+                    # Probably "Not Assessed"
+                    # skip participant if no mark
+                    continue
+                # example course name "9 My Subject Name 1C", remove " 1C"
+                course = " ".join(assessment.folder.name.split(" ")[:-1])
+                if participant.comment == "":
+                    comment = "NO COMMENT PROVIDED"
+                else:
+                    comment = participant.comment
+                writer.writerow(
+                    [
+                        participant.external_id,
+                        course,
+                        assessment.title,
+                        # take mark from "43 / 55" to 43
+                        mark,
+                        comment,
+                    ]
+                )

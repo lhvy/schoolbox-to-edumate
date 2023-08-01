@@ -59,6 +59,7 @@ def parse_json(data: dict) -> Result:
                 student["learner"]["preferredName"],
                 student["learner"]["lastName"],
                 student["feedback"]["mark"],
+                student["feedback"]["comment"],
                 # p_date,
             )
             participants.append(participant)

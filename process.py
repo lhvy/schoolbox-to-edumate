@@ -51,6 +51,15 @@ def parse_json(data: dict) -> Result:
             if "feedback" not in student or student["feedback"] is None:
                 continue
 
+            if student["learner"]["externalId"] == student["instructor"]["externalId"]:
+                continue
+
+            if (
+                student["learner"]["externalId"]
+                == student["feedback"]["instructor"]["externalId"]
+            ):
+                continue
+
             participant = Participant(
                 student["learner"]["id"],
                 student["learner"]["externalId"],

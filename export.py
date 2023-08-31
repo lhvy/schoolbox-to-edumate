@@ -72,8 +72,8 @@ def generate_assessments_csv(
 
             row = [
                 assessment.title,
-                "Test/Examination",  # task kind, read documentation
-                "Coursework/IA",  # coursework category, read documentation
+                "Test / Examination",  # task kind, read documentation
+                "Coursework / IA",  # coursework category, read documentation
                 "",  # description
                 # get year from due date in format 2022-03-09
                 assessment.due_date.split("-")[0],

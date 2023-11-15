@@ -109,3 +109,6 @@ class Result:
                 self.data,
             )
         )
+        
+    def filter_by_date(self, start_date: str, end_date: str) -> List["Assessment"]:
+        return list(filter(lambda a: start_date <= a.due_date and a.due_date <= end_date, self.data))

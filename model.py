@@ -94,7 +94,7 @@ class Result:
         self.data = data
         self.metadata = metadata
 
-    def filter_by_year(self, year: int) -> List["Assessment"]:
+    def filter_by_year_and_date(self, year: int, start_date: str, end_date: str) -> List["Assessment"]:
         """Filter results by year group.
 
         Returns:
@@ -105,10 +105,9 @@ class Result:
         return list(
             filter(
                 lambda a: a.folder.code is not None
-                and a.folder.code.startswith(str(year)),
+                and a.folder.code.startswith(str(year))
+                and start_date <= a.due_date
+                and a.due_date <= end_date,
                 self.data,
             )
         )
-        
-    def filter_by_date(self, start_date: str, end_date: str) -> List["Assessment"]:
-        return list(filter(lambda a: start_date <= a.due_date and a.due_date <= end_date, self.data))

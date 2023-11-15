@@ -48,9 +48,8 @@ assert len(result.data) == result.metadata.count
 # print(json.dumps(result.__dict__, default=lambda o: o.__dict__, indent=4))
 
 # The API returns tasks for all year groups, so we need to filter them
-assessments = result.filter_by_year(year_group)
 # Daylight savings means we might match 1 or 2 results outside of the date range
-assessments = result.filter_by_date(start_date, end_date)
+assessments = result.filter_by_year_and_date(year_group, start_date, end_date)
 
 generate_assessments_csv(assessments, year_group, start_date, end_date)
 generate_marks_csv(assessments, year_group, start_date, end_date)

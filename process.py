@@ -3,14 +3,10 @@ Process data from the API into a Result object.
 """
 
 from datetime import datetime
-from model import (
-    Assessment,
-    Folder,
-    Metadata,
-    Participant,
-    Result,
-    WorkType,
-)
+
+from progress.bar import Bar
+
+from model import Assessment, Folder, Metadata, Participant, Result, WorkType
 
 
 def parse_json(data: dict) -> Result:
@@ -28,8 +24,11 @@ def parse_json(data: dict) -> Result:
 
     result_metadata = Metadata(metadata["count"], metadata["cursor"])
 
+    bar = Bar("Processing data from API", max=result_metadata.count)
+
     assessments = []
     for task in assessment_data:
+        bar.next()
         work_type = WorkType(task["workType"]["id"], task["workType"]["name"])
 
         folder = Folder(
@@ -96,4 +95,5 @@ def parse_json(data: dict) -> Result:
         assessments.append(assessment)
 
     result = Result(assessments, result_metadata)
+    bar.finish()
     return result

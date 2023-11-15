@@ -2,13 +2,29 @@
 Takes input from user and makes request to API.
 """
 
+import concurrent.futures
 import os
+import time
 from datetime import datetime
 from typing import Dict, Tuple
 
 import requests
 from dotenv import load_dotenv
+from progress.spinner import Spinner
 
+
+def make_request(host: str, params: Dict[str, str | int], headers: Dict[str, str]) -> requests.Response:
+    """Make a request to the API.
+
+    Args:
+        host (str): Host URL
+        params (Dict[str, str | int]): Parameters for the request
+        headers (Dict[str, str]): Headers for the request
+
+    Returns:
+        requests.Response: Response from the API
+    """
+    return requests.get(host, params=params, headers=headers)
 
 def input_and_req(
     start_date=None, end_date=None, year_group=None
@@ -94,7 +110,16 @@ def input_and_req(
     if host is None:
         raise ValueError("HOST environment variable not set")
 
-    req = requests.get(host, params=params, headers=headers)
+    spinner = Spinner('Requesting data from API... ')
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(make_request, host, params, headers)
+        
+        while not future.done():
+            spinner.next()
+            time.sleep(0.1)
+            
+        req = future.result()
+    spinner.finish()
 
     return (
         year_group,

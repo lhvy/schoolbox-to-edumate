@@ -84,7 +84,11 @@ def input_and_req(
         str,
         str | int,
     ] = {
-        "filter": f'{{"weighted":true,"workType":{{"name":"Assessment task"}},"dueDate":{{"from": "{start_date.strftime("%Y-%m-%dT00:00:00+11:00")}","to": "{end_date.strftime("%Y-%m-%dT23:59:59+11:00")}"}}}}',
+        # I love daylight savings
+        # Our timezone is +10 for the start date and +11 for the end. This has a chance of missing submissions from midnight to 1am on the start date
+        # if the timezone is +11 for an assignment due on the start date, as well as catching extra tasks from midnight to 1am after the end date
+        # if the timezone is +10 for an assignment due right after the end date.
+        "filter": f'{{"weighted":true,"workType":{{"name":"Assessment task"}},"dueDate":{{"from": "{start_date.strftime("%Y-%m-%dT00:00:00+10:00")}","to": "{end_date.strftime("%Y-%m-%dT23:59:59+11:00")}"}}}}',
         "limit": 10000,  # Hopefully this is enough...
     }
 

@@ -8,12 +8,15 @@ import time
 from datetime import datetime
 from typing import Dict, Tuple
 
+import inquirer
 import requests
 from dotenv import load_dotenv
 from progress.spinner import Spinner
 
 
-def make_request(host: str, params: Dict[str, str | int], headers: Dict[str, str]) -> requests.Response:
+def make_request(
+    host: str, params: Dict[str, str | int], headers: Dict[str, str]
+) -> requests.Response:
     """Make a request to the API.
 
     Args:
@@ -26,9 +29,10 @@ def make_request(host: str, params: Dict[str, str | int], headers: Dict[str, str
     """
     return requests.get(host, params=params, headers=headers)
 
+
 def input_and_req(
     start_date=None, end_date=None, year_group=None
-) -> Tuple[int, str, str, dict, int]:
+) -> Tuple[int, str, str, str, dict, int]:
     """Takes input from user and makes request to API.
 
     Args:
@@ -94,6 +98,17 @@ def input_and_req(
         if not 7 <= year_group <= 13:
             raise ValueError("Year group must be between 7 and 13")
 
+    options = ["All tasks overview", "Comments export", "Markbook export"]
+    questions = [
+        inquirer.List(
+            "option",
+            message="Select an option",
+            choices=options,
+        ),
+    ]
+    answers = inquirer.prompt(questions)
+    mode = answers["option"]
+
     # ,"yearLevel":{{"name": "{year_group}"}}
     # convert to format required by API, start midnight and end 11:59pm
     params: Dict[
@@ -105,19 +120,24 @@ def input_and_req(
         "filter": f'{{"weighted":true,"workType":{{"name":"Assessment task"}},"dueDate":{{"from": "{start_date.strftime("%Y-%m-%dT00:00:00+11:00")}","to": "{end_date.strftime("%Y-%m-%dT23:59:59+10:00")}"}}}}',
         "limit": 10000,  # Hopefully this is enough...
     }
+    if mode == "All tasks overview":
+        # Don't remove unweighted or non-assessment tasks
+        params["filter"] = (
+            f'{{"dueDate":{{"from": "{start_date.strftime("%Y-%m-%dT00:00:00+11:00")}","to": "{end_date.strftime("%Y-%m-%dT23:59:59+10:00")}"}}}}'
+        )
 
     host: str | None = os.getenv("HOST")
     if host is None:
         raise ValueError("HOST environment variable not set")
 
-    spinner = Spinner('Requesting data from API... ')
+    spinner = Spinner("Requesting data from API... ")
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future = executor.submit(make_request, host, params, headers)
-        
+
         while not future.done():
             spinner.next()
             time.sleep(0.1)
-            
+
         req = future.result()
     spinner.finish()
 
@@ -125,6 +145,7 @@ def input_and_req(
         year_group,
         start_date.strftime("%Y-%m-%d"),
         end_date.strftime("%Y-%m-%d"),
+        mode,
         req.json(),
         req.status_code,
     )

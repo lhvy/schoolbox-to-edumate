@@ -3,6 +3,7 @@ Model classes to represent data from the API.
 """
 
 from dataclasses import dataclass
+import sys
 from typing import List
 
 
@@ -94,7 +95,9 @@ class Result:
         self.data = data
         self.metadata = metadata
 
-    def filter_by_year_and_date(self, year: int, start_date: str, end_date: str) -> List["Assessment"]:
+    def filter_by_year_and_date(
+        self, year: int, start_date: str, end_date: str
+    ) -> List["Assessment"]:
         """Filter results by year group.
 
         Returns:
@@ -105,7 +108,16 @@ class Result:
         return list(
             filter(
                 lambda a: a.folder.code is not None
-                and a.folder.code.startswith(str(year))
+                and (
+                    (
+                        isinstance(a.folder.code, str)
+                        and a.folder.code.startswith(str(year))
+                    )
+                    or (
+                        isinstance(a.folder.code, list)
+                        and any(c.startswith(str(year)) for c in a.folder.code)
+                    )
+                )
                 and start_date <= a.due_date
                 and a.due_date <= end_date,
                 self.data,

@@ -8,6 +8,45 @@ from typing import List
 from model import Assessment, Participant
 
 
+def generate_assessments_simple_csv(
+    assessments: List["Assessment"], year_group: int, start_date: str, end_date: str
+) -> None:
+    with open(
+        f"{year_group}_{start_date}_{end_date}_tasks.csv",
+        "w",
+        newline="",
+        encoding="UTF-8",
+    ) as tasks_file:
+        writer = csv.writer(tasks_file, delimiter=",")
+        writer.writerow(
+            [
+                "course",
+                "folder_code",
+                "title",
+                "work_type",
+                "assessment_type",
+                "due_date",
+                "weight",
+            ]
+        )
+        assessment: Assessment
+        for assessment in assessments:
+            # example course name "9 My Subject Name 1C", remove " 1C"
+            course = " ".join(assessment.folder.name.split(" ")[:-1])
+
+            row = [
+                course,
+                assessment.folder.code,
+                assessment.title,
+                assessment.work_type,
+                assessment.assessment_type,
+                assessment.due_date,
+                assessment.weight,
+            ]
+
+            writer.writerow(row)
+
+
 def generate_assessments_csv(
     assessments: List["Assessment"], year_group: int, start_date: str, end_date: str
 ) -> None:

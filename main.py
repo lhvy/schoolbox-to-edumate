@@ -12,8 +12,12 @@ import time
 
 from progress.spinner import Spinner
 
-from export import (generate_assessments_csv, generate_comments_csv,
-                    generate_marks_csv)
+from export import (
+    generate_assessments_csv,
+    generate_assessments_simple_csv,
+    generate_comments_csv,
+    generate_marks_csv,
+)
 from input import input_and_req
 from model import Result
 from process import parse_json
@@ -24,7 +28,8 @@ def save(data):
     with open("data.json", "w", encoding="UTF-8") as f:
         json.dump(data, f, indent=4)
 
-year_group, start_date, end_date, data, status = input_and_req()
+
+year_group, start_date, end_date, mode, data, status = input_and_req()
 
 spinner = Spinner("Saving raw API data to file... ")
 with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -39,7 +44,7 @@ if status != 200:
     print("Check data.json for the full error message")
     sys.exit(1)
 
-result: Result = parse_json(data)
+result: Result = parse_json(data, mode)
 
 # Verify number of assessments matches metadata
 assert len(result.data) == result.metadata.count
@@ -51,8 +56,13 @@ assert len(result.data) == result.metadata.count
 # Daylight savings means we might match 1 or 2 results outside of the date range
 assessments = result.filter_by_year_and_date(year_group, start_date, end_date)
 
-generate_assessments_csv(assessments, year_group, start_date, end_date)
-generate_marks_csv(assessments, year_group, start_date, end_date)
-generate_comments_csv(assessments, year_group, start_date, end_date)
+if mode == "All tasks overview":
+    generate_assessments_simple_csv(assessments, year_group, start_date, end_date)
+elif mode == "Comments export":
+    exit(1)
+elif mode == "Markbook export":
+    generate_assessments_csv(assessments, year_group, start_date, end_date)
+    generate_marks_csv(assessments, year_group, start_date, end_date)
+    generate_comments_csv(assessments, year_group, start_date, end_date)
 
 print("Generated marks.txt, tasks.txt and comments.csv for year " + str(year_group))

@@ -59,7 +59,7 @@ assessments = result.filter_by_year_and_date(year_group, start_date, end_date)
 if mode == "All tasks overview":
     generate_assessments_simple_csv(assessments, year_group, start_date, end_date)
 elif mode == "Comments export":
-    exit(1)
+    generate_comments_csv(assessments, year_group, start_date, end_date)
 elif mode == "Markbook export":
     generate_assessments_csv(assessments, year_group, start_date, end_date)
     generate_marks_csv(assessments, year_group, start_date, end_date)

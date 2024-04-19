@@ -3,6 +3,8 @@ Takes a Result object and generates a CSV files for tasks and marks.
 """
 
 import csv
+import re
+import sys
 from typing import List
 
 from model import Assessment, Participant
@@ -64,31 +66,38 @@ def generate_assessments_csv(
         "w",
         newline="",
         encoding="UTF-8",
-    ) as tasks_file:
+    ) as tasks_file, open(
+        f"{year_group}_{start_date}_{end_date}_modified_tasks.txt",
+        "w",
+        newline="",
+        encoding="UTF-8",
+    ) as modified_tasks_file:
         writer = csv.writer(tasks_file, delimiter="\t")
+        modified_writer = csv.writer(modified_tasks_file, delimiter="\t")
         written_rows = set()
-        writer.writerow(
-            [
-                "coursework_task",
-                "task_kind",
-                "coursework_category",
-                "description",
-                "academic_year",  # year in which the assessment is given
-                "course",
-                "weighting",
-                "mark_out_of",
-                "dmy_set_date",
-                "dmy_due_date",
-                "into_markbook_flag",
-                "record_marks_flag",
-                "grade_only",
-                "criteria_only",
-                "status_flag",
-                "release_marks_flag",
-                "task_dropdown_flag",
-                "do_not_allow_comments",
-            ]
-        )
+        header = [
+            "coursework_task",
+            "task_kind",
+            "coursework_category",
+            "description",
+            "academic_year",  # year in which the assessment is given
+            "course",
+            "weighting",
+            "mark_out_of",
+            "dmy_set_date",
+            "dmy_due_date",
+            "into_markbook_flag",
+            "record_marks_flag",
+            "grade_only",
+            "criteria_only",
+            "status_flag",
+            "release_marks_flag",
+            "task_dropdown_flag",
+            "do_not_allow_comments",
+        ]
+
+        writer.writerow(header)
+        modified_writer.writerow(header)
         assessment: Assessment
         for assessment in assessments:
             # assessment.participants contains all students,
@@ -109,8 +118,15 @@ def generate_assessments_csv(
             # example course name "9 My Subject Name 1C", remove " 1C"
             course = " ".join(assessment.folder.name.split(" ")[:-1])
 
+            # filter out any text enclosed in curly braces from the title using regex
+            # remove any double spaces
+            # remove any leading or trailing whitespace
+            title = re.sub(r"\{.*?\}", "", assessment.title)
+            title = re.sub(r"\s+", " ", title)
+            title = title.strip()
+
             row = [
-                assessment.title,
+                title,
                 "Test / Examination",  # task kind, read documentation
                 "Coursework / IA",  # coursework category, read documentation
                 "",  # description
@@ -122,24 +138,33 @@ def generate_assessments_csv(
             ]
             row_tuple = tuple(row)
 
-            if row_tuple in written_rows:
-                continue
+            for written_row in written_rows:
+                if row_tuple == written_row:
+                    continue
+                if row_tuple[0] == written_row[0] and row_tuple[5] == written_row[5]:
+                    print("Non-perfect task match found, skipping duplicate task: ")
+                    print("title, kind, category, year, course, weight")
+                    print(row_tuple)
+                    print(written_row)
+                    sys.exit(1)
 
-            writer.writerow(
-                row
-                + [
-                    assessment.due_date,  # set date, for now just using the due date
-                    assessment.due_date,
-                    1,  # Set to 1 if you want task to appear in the markbook
-                    1,  # Set to 1 to record marks for this task
-                    0,  # Set to 1 if you only want record grades.
-                    0,  # Set to 1 to record criteria only.
-                    0,  # Set to 1 to not show this task in the portal
-                    0,  # Set to 0 if you want task marks / results to appear on the portal
-                    0,  # Set to 1 to allow online submission to the dropdown box
-                    0,  # Set to 1 to check the do not allow comments in markbook dropdown box
-                ]
-            )
+            output = row + [
+                assessment.due_date,  # set date, for now just using the due date
+                assessment.due_date,
+                1,  # Set to 1 if you want task to appear in the markbook
+                1,  # Set to 1 to record marks for this task
+                0,  # Set to 1 if you only want record grades.
+                0,  # Set to 1 to record criteria only.
+                0,  # Set to 1 to not show this task in the portal
+                0,  # Set to 0 if you want task marks / results to appear on the portal
+                0,  # Set to 1 to allow online submission to the dropdown box
+                0,  # Set to 1 to check the do not allow comments in markbook dropdown box
+            ]
+
+            if "MODIFIED" in title:
+                modified_writer.writerow(output)
+            else:
+                writer.writerow(output)
             written_rows.add(row_tuple)
 
 
@@ -160,18 +185,26 @@ def generate_marks_csv(
         "w",
         newline="",
         encoding="UTF-8",
-    ) as marks_file:
+    ) as marks_file, open(
+        f"{year_group}_{start_date}_{end_date}_modified_marks.txt",
+        "w",
+        newline="",
+        encoding="UTF-8",
+    ) as modified_marks_file:
         writer = csv.writer(marks_file, delimiter="\t")
-        writer.writerow(
-            [
-                "student_number",
-                "coursework_task",
-                "raw_mark",
-                "raw_mark_date",  # date in which the mark was given
-                "course",
-                "academic_year",
-            ]
-        )
+        modified_writer = csv.writer(modified_marks_file, delimiter="\t")
+        written_rows = set()
+        header = [
+            "student_number",
+            "coursework_task",
+            "raw_mark",
+            "raw_mark_date",  # date in which the mark was given
+            "course",
+            "academic_year",
+        ]
+
+        writer.writerow(header)
+        modified_writer.writerow(header)
         assessment: Assessment
         for assessment in assessments:
             participant: Participant
@@ -188,18 +221,45 @@ def generate_marks_csv(
                     continue
                 # example course name "9 My Subject Name 1C", remove " 1C"
                 course = " ".join(assessment.folder.name.split(" ")[:-1])
-                writer.writerow(
-                    [
-                        participant.external_id,
-                        assessment.title,
-                        # take mark from "43 / 55" to 43
-                        mark,
-                        assessment.due_date,
-                        course,
-                        # get year from due date in format 2022-03-09
-                        assessment.due_date.split("-")[0],
-                    ]
-                )
+
+                # filter out any text enclosed in curly braces from the title using regex
+                # remove any double spaces
+                # remove any leading or trailing whitespace
+                title = re.sub(r"\{.*?\}", "", assessment.title)
+                title = re.sub(r"\s+", " ", title)
+                title = title.strip()
+
+                row = [
+                    participant.external_id,
+                    title,
+                    # take mark from "43 / 55" to 43
+                    mark,
+                    assessment.due_date,
+                    course,
+                    # get year from due date in format 2022-03-09
+                    assessment.due_date.split("-")[0],
+                ]
+                row_tuple = tuple(row)
+
+                for written_row in written_rows:
+                    if row == written_row:
+                        continue
+                    if (
+                        row_tuple[0] == written_row[0]
+                        and row_tuple[1] == written_row[1]
+                        and row_tuple[4] == written_row[4]
+                    ):
+                        print("Non-perfect mark match found, skipping duplicate mark: ")
+                        print("student, title, mark, date, course, year")
+                        print(row_tuple)
+                        print(written_row)
+                        sys.exit(1)
+
+                if "MODIFIED" in title:
+                    modified_writer.writerow(row)
+                else:
+                    writer.writerow(row)
+                written_rows.add(row_tuple)
 
 
 def generate_comments_csv(

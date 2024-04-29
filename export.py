@@ -161,7 +161,7 @@ def generate_assessments_csv(
                 0,  # Set to 1 to check the do not allow comments in markbook dropdown box
             ]
 
-            if "MODIFIED" in title:
+            if "MODIFIED" in title.upper():
                 modified_writer.writerow(output)
             else:
                 writer.writerow(output)
@@ -255,7 +255,7 @@ def generate_marks_csv(
                         print(written_row)
                         sys.exit(1)
 
-                if "MODIFIED" in title:
+                if "MODIFIED" in title.upper():
                     modified_writer.writerow(row)
                 else:
                     writer.writerow(row)

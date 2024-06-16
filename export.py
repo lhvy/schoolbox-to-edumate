@@ -138,8 +138,10 @@ def generate_assessments_csv(
             ]
             row_tuple = tuple(row)
 
+            duplicate = False
             for written_row in written_rows:
                 if row_tuple == written_row:
+                    duplicate = True
                     continue
                 if row_tuple[0] == written_row[0] and row_tuple[5] == written_row[5]:
                     print("Non-perfect task match found, skipping duplicate task: ")
@@ -147,6 +149,9 @@ def generate_assessments_csv(
                     print(row_tuple)
                     print(written_row)
                     sys.exit(1)
+
+            if duplicate:
+                continue
 
             output = row + [
                 assessment.due_date,  # set date, for now just using the due date

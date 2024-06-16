@@ -3,7 +3,6 @@ Model classes to represent data from the API.
 """
 
 from dataclasses import dataclass
-import sys
 from typing import List
 
 
@@ -53,8 +52,8 @@ class WorkType:
     Represents the type of assessment, e.g. "Assessment task", "Test", "Exam".
     """
 
-    internal_id: str
-    name: str
+    internal_id: str | None
+    name: str | None
 
 
 @dataclass

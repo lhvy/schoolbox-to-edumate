@@ -63,6 +63,5 @@ elif mode == "Comments export":
 elif mode == "Markbook export":
     generate_assessments_csv(assessments, year_group, start_date, end_date)
     generate_marks_csv(assessments, year_group, start_date, end_date)
-    generate_comments_csv(assessments, year_group, start_date, end_date)
 
 print("Generated marks.txt, tasks.txt and comments.csv for year " + str(year_group))

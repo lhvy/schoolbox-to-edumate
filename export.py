@@ -215,8 +215,10 @@ def generate_marks_csv(
         ]
 
         writer.writerow(header)
-        modified_writer.writerow(header)
-        not_assessed_writer.writerow(header)
+        modified_writer.writerow(header[0:1] + ["First Name", "Last Name"] + header[1:])
+        not_assessed_writer.writerow(
+            header[0:1] + ["First Name", "Last Name"] + header[1:]
+        )
         for assessment in assessments:
             participant: Participant
             for participant in assessment.participants:
@@ -271,9 +273,17 @@ def generate_marks_csv(
                         sys.exit(1)
 
                 if not_assessed:
-                    not_assessed_writer.writerow(row)
+                    not_assessed_writer.writerow(
+                        row[0:1]
+                        + [participant.first_name, participant.last_name]
+                        + row[1:]
+                    )
                 elif "MODIFIED" in title.upper():
-                    modified_writer.writerow(row)
+                    modified_writer.writerow(
+                        row[0:1]
+                        + [participant.first_name, participant.last_name]
+                        + row[1:]
+                    )
                 else:
                     writer.writerow(row)
                 written_rows.add(row_tuple)

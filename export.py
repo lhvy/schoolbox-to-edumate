@@ -195,9 +195,15 @@ def generate_marks_csv(
         "w",
         newline="",
         encoding="UTF-8",
-    ) as modified_marks_file:
+    ) as modified_marks_file, open(
+        f"{year_group}_{start_date}_{end_date}_not_assessed_marks.txt",
+        "w",
+        newline="",
+        encoding="UTF-8",
+    ) as not_assessed_file:
         writer = csv.writer(marks_file, delimiter="\t")
         modified_writer = csv.writer(modified_marks_file, delimiter="\t")
+        not_assessed_writer = csv.writer(not_assessed_file, delimiter="\t")
         written_rows = set()
         header = [
             "student_number",
@@ -210,20 +216,24 @@ def generate_marks_csv(
 
         writer.writerow(header)
         modified_writer.writerow(header)
-        assessment: Assessment
+        not_assessed_writer.writerow(header)
         for assessment in assessments:
             participant: Participant
             for participant in assessment.participants:
+                not_assessed = False
                 if " %" in participant.mark:
                     # "86.42 %"
                     mark = participant.mark.split(" %")[0]
                 elif " / " in participant.mark:
                     # "43 / 55"
                     mark = participant.mark.split(" / ")[0]
+                elif participant.mark == "Not Assessed":
+                    mark = participant.mark
+                    not_assessed = True
                 else:
-                    # Probably "Not Assessed"
-                    # skip participant if no mark
+                    # what?
                     continue
+
                 # example course name "9 My Subject Name 1C", remove " 1C"
                 course = " ".join(assessment.folder.name.split(" ")[:-1])
 
@@ -262,6 +272,8 @@ def generate_marks_csv(
 
                 if "MODIFIED" in title.upper():
                     modified_writer.writerow(row)
+                elif not_assessed:
+                    not_assessed_writer.writerow(row)
                 else:
                     writer.writerow(row)
                 written_rows.add(row_tuple)

@@ -270,10 +270,10 @@ def generate_marks_csv(
                         print(written_row)
                         sys.exit(1)
 
-                if "MODIFIED" in title.upper():
-                    modified_writer.writerow(row)
-                elif not_assessed:
+                if not_assessed:
                     not_assessed_writer.writerow(row)
+                elif "MODIFIED" in title.upper():
+                    modified_writer.writerow(row)
                 else:
                     writer.writerow(row)
                 written_rows.add(row_tuple)

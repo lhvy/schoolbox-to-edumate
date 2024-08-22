@@ -67,13 +67,13 @@ def generate_assessments_csv(
         newline="",
         encoding="UTF-8",
     ) as tasks_file, open(
-        f"{year_group}_{start_date}_{end_date}_modified_tasks.txt",
+        f"{year_group}_{start_date}_{end_date}_modified_tasks.csv",
         "w",
         newline="",
         encoding="UTF-8",
     ) as modified_tasks_file:
         writer = csv.writer(tasks_file, delimiter="\t")
-        modified_writer = csv.writer(modified_tasks_file, delimiter="\t")
+        modified_writer = csv.writer(modified_tasks_file, delimiter=",")
         written_rows = set()
         header = [
             "coursework_task",
@@ -191,19 +191,19 @@ def generate_marks_csv(
         newline="",
         encoding="UTF-8",
     ) as marks_file, open(
-        f"{year_group}_{start_date}_{end_date}_modified_marks.txt",
+        f"{year_group}_{start_date}_{end_date}_modified_marks.csv",
         "w",
         newline="",
         encoding="UTF-8",
     ) as modified_marks_file, open(
-        f"{year_group}_{start_date}_{end_date}_not_assessed_marks.txt",
+        f"{year_group}_{start_date}_{end_date}_not_assessed_marks.csv",
         "w",
         newline="",
         encoding="UTF-8",
     ) as not_assessed_file:
         writer = csv.writer(marks_file, delimiter="\t")
-        modified_writer = csv.writer(modified_marks_file, delimiter="\t")
-        not_assessed_writer = csv.writer(not_assessed_file, delimiter="\t")
+        modified_writer = csv.writer(modified_marks_file, delimiter=",")
+        not_assessed_writer = csv.writer(not_assessed_file, delimiter=",")
         written_rows = set()
         header = [
             "student_number",

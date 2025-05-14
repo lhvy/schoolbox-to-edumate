@@ -6,10 +6,10 @@ from datetime import datetime
 
 from progress.bar import Bar
 
-from model import Assessment, Folder, Metadata, Participant, Result, WorkType
+from model import Assessment, Folder, Participant, Result, WorkType
 
 
-def parse_json(data: dict, mode: str) -> Result:
+def parse_json(assessment_data: list[dict], mode: str) -> Result:
     """Parse JSON data from the API into a Result object.
 
     Args:
@@ -20,12 +20,8 @@ def parse_json(data: dict, mode: str) -> Result:
         Result: Result object containing assessments and metadata
     """
 
-    assessment_data = data["data"]
-    metadata = data["metadata"]
-
-    result_metadata = Metadata(metadata["count"], metadata["cursor"])
-
-    bar = Bar("Processing data from API", max=result_metadata.count)
+    count = len(assessment_data)
+    bar = Bar("Processing data from API", max=count)
 
     assessments = []
     for task in assessment_data:
@@ -45,7 +41,7 @@ def parse_json(data: dict, mode: str) -> Result:
         participants = []
         if mode != "All tasks overview":
             if task["participants"] is None or len(task["participants"]) == 0:
-                result_metadata.count -= 1  # Keep the count accurate
+                count -= 1  # Keep the count accurate
                 continue
             for student in task["participants"]:
                 # change format of date from 2023-02-24T14:40:24+11:00 to YYYY-MM-DD
@@ -101,11 +97,12 @@ def parse_json(data: dict, mode: str) -> Result:
         if mode != "All tasks overview" and (
             assessment.weight == 0 or assessment.weight is None
         ):
-            result_metadata.count -= 1
+            count -= 1
             continue
 
         assessments.append(assessment)
 
-    result = Result(assessments, result_metadata)
+    assert count == len(assessments)
+    result = Result(assessments)
     bar.finish()
     return result

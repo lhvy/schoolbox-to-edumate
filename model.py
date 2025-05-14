@@ -75,24 +75,13 @@ class Assessment:
     participants: List[Participant]
 
 
-@dataclass
-class Metadata:
-    """
-    Stores metadata from an API request.
-    """
-
-    count: int
-    cursor: int
-
-
 class Result:
     """
     Stores the processed data from an API request.
     """
 
-    def __init__(self, data: List["Assessment"], metadata: Metadata):
+    def __init__(self, data: List["Assessment"]):
         self.data = data
-        self.metadata = metadata
 
     def filter_by_year_and_date(
         self, year: int, start_date: str, end_date: str

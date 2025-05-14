@@ -32,7 +32,7 @@ def make_request(
 
 def input_and_req(
     start_date=None, end_date=None, year_group=None
-) -> Tuple[int, str, str, str, dict, int]:
+) -> Tuple[int, str, str, str, list[dict], int]:
     """Takes input from user and makes request to API.
 
     Args:
@@ -118,7 +118,7 @@ def input_and_req(
         # I love daylight savings
         # This is a greedy filter that will match 1 hour before and after the start and end dates if the timezone is incorrect.
         "filter": f'{{"weighted":true,"workType":{{"name":"Assessment task"}},"dueDate":{{"from": "{start_date.strftime("%Y-%m-%dT00:00:00+11:00")}","to": "{end_date.strftime("%Y-%m-%dT23:59:59+10:00")}"}}}}',
-        "limit": 10000,  # Hopefully this is enough...
+        "limit": 500,
     }
     if mode == "All tasks overview":
         # Don't remove unweighted or non-assessment tasks
@@ -131,21 +131,32 @@ def input_and_req(
         raise ValueError("HOST environment variable not set")
 
     spinner = Spinner("Requesting data from API... ")
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(make_request, host, params, headers)
+    data = []
+    while True:
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(make_request, host, params, headers)
 
-        while not future.done():
-            spinner.next()
-            time.sleep(0.1)
+            while not future.done():
+                spinner.next()
+                time.sleep(0.1)
 
-        req = future.result()
+            req = future.result()
+
+        current = req.json()
+        params["cursor"] = current["metadata"]["cursor"]
+        data.extend(current["data"])
+
+        if current["metadata"]["cursor"] is None:
+            break
     spinner.finish()
+
+    assert len(data) == current["metadata"]["count"]
 
     return (
         year_group,
         start_date.strftime("%Y-%m-%d"),
         end_date.strftime("%Y-%m-%d"),
         mode,
-        req.json(),
+        data,
         req.status_code,
     )

@@ -46,8 +46,6 @@ if status != 200:
 
 result: Result = parse_json(data, mode)
 
-# Verify number of assessments matches metadata
-assert len(result.data) == result.metadata.count
 
 # Print result (destructure the object)
 # print(json.dumps(result.__dict__, default=lambda o: o.__dict__, indent=4))
